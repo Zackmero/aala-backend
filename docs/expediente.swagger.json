@@ -1,0 +1,70 @@
+{
+  "paths": {
+    "/api/expedientes": {
+      "get": {
+        "summary": "Obtener la lista de todos los expedientes",
+        "tags": ["Expedientes"],
+        "responses": {
+          "200": { "description": "Lista de expedientes obtenida correctamente" },
+          "500": { "description": "Error interno del servidor" }
+        }
+      },
+      "post": {
+        "summary": "Abrir un nuevo expediente en el despacho",
+        "tags": ["Expedientes"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "cliente_id": { "type": "integer", "example": 1 },
+                  "materia_id": { "type": "integer", "example": 2 },
+                  "asunto_id": { "type": "integer", "example": 1 },
+                  "estatus_id": { "type": "integer", "example": 1 },
+                  "numero_expediente_judicial": { "type": "string", "example": "1245/2026-B" },
+                  "descripcion": { "type": "string", "example": "El cliente solicita el divorcio por mutuo acuerdo." },
+                  "creado_por": { "type": "integer", "example": 1 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Expediente registrado exitosamente (Título autogenerado)" },
+          "500": { "description": "Error interno del servidor" }
+        }
+      }
+    },
+    "/api/expedientes/{id}": {
+      "put": {
+        "summary": "Actualizar detalles o estatus de un expediente",
+        "tags": ["Expedientes"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "description": "ID interno del expediente", "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "estatus_id": { "type": "integer", "example": 2 },
+                  "numero_expediente_judicial": { "type": "string", "example": "1245/2026-B" },
+                  "descripcion": { "type": "string", "example": "Actualización de los hechos iniciales." },
+                  "actualizado_por": { "type": "integer", "example": 1 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Expediente actualizado correctamente" },
+          "500": { "description": "Error interno del servidor" }
+        }
+      }
+    }
+  }
+}

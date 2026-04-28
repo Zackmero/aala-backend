@@ -1,0 +1,150 @@
+{
+  "paths": {
+    "/api/clientes": {
+      "get": {
+        "summary": "Obtiene la lista de todos los clientes",
+        "tags": [
+          "Clientes"
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista obtenida correctamente"
+          }
+        }
+      },
+      "post": {
+        "summary": "Registra un nuevo cliente",
+        "tags": [
+          "Clientes"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre_completo": {
+                    "type": "string",
+                    "example": "Juan Pérez"
+                  },
+                  "rfc": {
+                    "type": "string",
+                    "example": "ABCD123456"
+                  },
+                  "curp": {
+                    "type": "string",
+                    "example": "JUPG850412HDF"
+                  },
+                  "telefono": {
+                    "type": "string",
+                    "example": "3312345678"
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "juan@example.com"
+                  },
+                  "direccion": {
+                    "type": "string",
+                    "example": "Calle Falsa 123"
+                  },
+                  "estado_civil": {
+                    "type": "string",
+                    "example": "Casado"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Cliente creado exitosamente"
+          }
+        }
+      },
+      "put": {
+        "summary": "Actualiza la información de un cliente existente",
+        "tags": [
+          "Clientes"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id_cliente": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "nombre_completo": {
+                    "type": "string",
+                    "example": "Juan Pérez"
+                  },
+                  "rfc": {
+                    "type": "string",
+                    "example": "ABCD123456"
+                  },
+                  "curp": {
+                    "type": "string",
+                    "example": "JUPG850412HDF"
+                  },
+                  "telefono": {
+                    "type": "string",
+                    "example": "3312345678"
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "juan@example.com"
+                  },
+                  "direccion": {
+                    "type": "string",
+                    "example": "Calle Falsa 123"
+                  },
+                  "estado_civil": {
+                    "type": "string",
+                    "example": "Casado"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cliente actualizado exitosamente"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Elimina un cliente existente",
+        "tags": [
+          "Clientes"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id_cliente": {
+                    "type": "integer",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cliente eliminado exitosamente"
+          }
+        }
+      }
+    }
+  }
+}

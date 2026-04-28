@@ -1,0 +1,29 @@
+{
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "summary": "Iniciar sesión en el sistema",
+        "tags": ["Autenticación"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "example": "zacarias@despacho.com" },
+                  "password": { "type": "string", "example": "12345678" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login exitoso" },
+          "401": { "description": "Credenciales inválidas" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "paths": {
+    "/api/catalogos/": {
+      "get": {
+        "summary": "Obtener todos los catalogos",
+        "tags": ["Catalogos"],
+        "security": [],
+        "responses": {
+          "200": { "description": "Lista de catalogos obtenida exitosamente" }
+        }
+      }
+    }
+  }
+}
