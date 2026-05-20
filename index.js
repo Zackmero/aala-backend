@@ -10,6 +10,7 @@ const clientesDocs = require('./docs/clientes.swagger.json');
 const authDocs = require('./docs/auth.swagger.json');
 const catalogosDocs = require('./docs/catalogos.swagger.json');
 const expedienteDocs = require('./docs/expediente.swagger.json'); 
+const documentosDocs = require('./docs/documentos.swagger.json');
 
 const app = express();
 
@@ -39,7 +40,8 @@ const swaggerOptions = {
       ...clientesDocs.paths,
       ...authDocs.paths,
       ...catalogosDocs.paths,
-      ...expedienteDocs.paths 
+      ...expedienteDocs.paths,
+      ...documentosDocs.paths
     },
     security: [{ bearerAuth: [] }],
   },
@@ -62,11 +64,19 @@ const clientesRoutes = require('./routes/clientesRoutes');
 const authRoutes = require('./routes/authRoutes');
 const catalogosRoutes = require('./routes/catalogosRoutes');
 const expedienteRoutes = require('./routes/expedienteRoutes');
+const documentosRoutes = require('./routes/documentosRoutes');
+const pagoRoutes = require('./routes/pagoRoutes'); 
+const path = require('path');
+
+// Servimos los archivos estáticos de la carpeta uploads para que Vue pueda acceder a ellos
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/clientes', clientesRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/catalogos', catalogosRoutes);
 app.use('/api/expedientes', expedienteRoutes);
+app.use('/api/documentos', documentosRoutes);
+app.use('/api/pagos', pagoRoutes);
 
 // Iniciamos el servidor
 const PORT = process.env.PORT || 3000;

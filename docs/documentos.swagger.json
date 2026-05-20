@@ -1,0 +1,37 @@
+{
+  "paths": {
+    "/api/documentos": {
+      "post": {
+        "summary": "Subir múltiples documentos físicos a un expediente",
+        "tags": ["Documentos"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expediente_id": { "type": "integer", "description": "ID del expediente al que pertenecen" },
+                  "tipo": { "type": "string", "description": "Ej: INE, Contrato, etc." },
+                  "notas": { "type": "string", "description": "Anotaciones adicionales opcionales" },
+                  "subido_por": { "type": "integer", "description": "ID del usuario que sube el archivo" },
+                  "archivos": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "binary" },
+                    "description": "Selecciona uno o más archivos (PDF, JPG, PNG)"
+                  }
+                },
+                "required": ["expediente_id", "tipo", "archivos", "subido_por"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Archivos guardados correctamente" },
+          "400": { "description": "No se enviaron archivos o faltan datos" },
+          "500": { "description": "Error interno del servidor" }
+        }
+      }
+    }
+  }
+}
