@@ -1,5 +1,5 @@
 // controllers/documentoController.js
-const DocumentoModel = require("../models/DocumentoModel");
+const DocumentoModel = require("../models/documentoModel");
 const { S3Client, GetObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 require("dotenv").config();
