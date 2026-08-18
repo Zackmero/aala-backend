@@ -53,7 +53,21 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsDoc(swaggerOptions);
 
 // --- MIDDLEWARES ---
-app.use(cors()); 
+const origenesPermitidos = [
+  'http://localhost:5173', 
+  'https://portal.aala.mx' 
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || origenesPermitidos.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('No permitido por CORS'));
+    }
+  }
+}));
+
 app.use(express.json()); 
 
 // Montamos Swagger
