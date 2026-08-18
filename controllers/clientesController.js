@@ -7,7 +7,7 @@ const db = require('../config/db');
 const obtenerClientes = async (req, res) => {
     try {
         const clientes = await Cliente.getAll();
-        res.json(clientes);
+        res.status(200).json(clientes);
     } catch (error) {
         console.error('Error al obtener clientes:', error);
         res.status(500).json({ mensaje: 'Error interno del servidor' });

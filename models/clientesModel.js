@@ -5,7 +5,7 @@ const db = require('../config/db');
 const Cliente = {
     // Obtener todos los registros
     getAll: async () => {
-        const [rows] = await db.query('SELECT * FROM clientes ORDER BY id DESC');
+        const [rows] = await db.query('SELECT * FROM clientes ORDER BY id asc');
         return rows;
     },
 

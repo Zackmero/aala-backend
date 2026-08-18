@@ -46,7 +46,8 @@ const Expediente = {
                 e.id, 
                 e.titulo, 
                 e.numero_expediente_judicial, 
-                cli.nombre_completo AS cliente,  
+                cli.nombre_completo AS cliente, 
+                ab.nombre AS abogado, 
                 m.nombre AS materia, 
                 a.nombre AS asunto, 
                 est.nombre AS estatus,
@@ -57,6 +58,7 @@ const Expediente = {
             JOIN catalogo_materias m ON e.materia_id = m.id
             JOIN catalogo_asuntos a ON e.asunto_id = a.id
             JOIN catalogo_estatus est ON e.estatus_id = est.id
+            JOIN abogados ab ON e.abogado_id = ab.usuario_id
             ORDER BY e.id DESC
         `;
     const [filas] = await db.query(query);
@@ -65,7 +67,13 @@ const Expediente = {
 
   // 3. LEER UNO SOLO (Para ver los detalles del expediente)
   obtenerPorId: async (id) => {
-    const query = `SELECT * FROM expedientes WHERE id = ?`;
+    const query = `SELECT 
+                      e.*,
+                      cli.nombre_completo AS nombre_cliente
+                    FROM expedientes e 
+                    LEFT JOIN clientes cli 
+                      ON e.cliente_id = cli.id 
+                    WHERE e.id = ?`;
     const [filas] = await db.query(query, [id]);
     return filas[0];
   },
@@ -74,11 +82,12 @@ const Expediente = {
   actualizar: async (id, datos) => {
     const query = `
             UPDATE expedientes 
-            SET estatus_id = ?, numero_expediente_judicial = ?, descripcion = ?, actualizado_por = ?
+            SET estatus_id = ?, abogado_id = ?, numero_expediente_judicial = ?, descripcion = ?, actualizado_por = ?
             WHERE id = ?
         `;
     await db.query(query, [
       datos.estatus_id,
+      datos.abogado_id,
       datos.numero_expediente_judicial,
       datos.descripcion,
       datos.actualizado_por,

@@ -60,24 +60,34 @@ app.use(express.json());
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // --- DEFINICIÓN DE RUTAS ---
+const dashboardRoutes = require('./routes/dashboardRoutes');
 const clientesRoutes = require('./routes/clientesRoutes');
 const authRoutes = require('./routes/authRoutes');
 const catalogosRoutes = require('./routes/catalogosRoutes');
 const expedienteRoutes = require('./routes/expedienteRoutes');
 const documentosRoutes = require('./routes/documentosRoutes');
-const pagoRoutes = require('./routes/pagoRoutes'); 
+const pagoRoutes = require('./routes/pagoRoutes');
+const gastosRoutes = require('./routes/gastosRoutes');
+const audienciasRoutes = require('./routes/audicenciasRoutes');
+const perfilFiscalRoutes = require('./routes/perfilFiscalRoutes'); 
 const path = require('path');
 
 // Servimos los archivos estáticos de la carpeta uploads para que Vue pueda acceder a ellos
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/clientes', clientesRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/catalogos', catalogosRoutes);
 app.use('/api/expedientes', expedienteRoutes);
 app.use('/api/documentos', documentosRoutes);
 app.use('/api/pagos', pagoRoutes);
+app.use('/api/gastos', gastosRoutes);
+app.use('/api/audiencias', audienciasRoutes);
+app.use('/api/perfil-fiscal', perfilFiscalRoutes); 
+app.use('/api/contabilidad/perfiles/cliente', perfilFiscalRoutes);
 
+ 
 // Iniciamos el servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
