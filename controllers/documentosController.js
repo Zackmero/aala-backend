@@ -31,7 +31,7 @@ const subirDocumentos = async (req, res) => {
       file.location, // ruta_url (Link de S3 devuelto por multer-s3)
       payload.tipo, // tipo_documento
       payload.notas, // notas
-      payload.subido_por, // subido_por
+      req.usuario?.id ?? null, // subido_por (siempre del token)
     ]);
 
     // Mandamos a guardar a MySQL

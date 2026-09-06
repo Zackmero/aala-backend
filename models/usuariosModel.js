@@ -4,7 +4,8 @@ const Usuario = {
   buscarPorEmail: async (email) => {
     const query = `
                 SELECT u.*, 
-                   COALESCE(a.nombre, c.nombre_completo) as nombre_real
+                   COALESCE(a.nombre, c.nombre_completo) as nombre_real,
+                   COALESCE(a.es_socio, 0) as es_socio
             FROM usuarios u
             LEFT JOIN abogados a ON u.id = a.usuario_id
             LEFT JOIN clientes c ON u.id = c.usuario_id
