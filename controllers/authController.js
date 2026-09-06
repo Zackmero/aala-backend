@@ -11,15 +11,20 @@ const login = async (req, res) => {
 
         if (usuario && usuario.password === password) {
             // Creamos el token con el ID y el ROL
+            // es_socio viaja FIRMADO dentro del token: el navegador no lo puede alterar.
+            const esSocio = Number(usuario.es_socio) === 1 ? 1 : 0;
+
             const token = jwt.sign(
-                { id: usuario.id, rol: usuario.rol }, 
+                { id: usuario.id, rol: usuario.rol, es_socio: esSocio }, 
                 process.env.JWT_SECRET || 'clave_secreta', 
                 { expiresIn: '8h' }
             );
 
             return res.json({ 
+                id: usuario.id,
                 token, 
                 rol: usuario.rol, 
+                es_socio: esSocio,
                 nombre: usuario.nombre_real 
             });
         }

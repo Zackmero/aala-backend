@@ -46,6 +46,13 @@ const Expediente = {
                 e.id, 
                 e.titulo, 
                 e.numero_expediente_judicial, 
+                e.cliente_id,
+                e.abogado_id,
+                e.materia_id,
+                e.asunto_id,
+                e.estatus_id,
+                e.descripcion,
+                e.fecha_cierre_esperada,
                 cli.nombre_completo AS cliente, 
                 ab.nombre AS abogado, 
                 m.nombre AS materia, 
@@ -54,11 +61,11 @@ const Expediente = {
                 e.fecha_apertura,
                 e.prioridad
             FROM expedientes e
-            JOIN clientes cli ON e.cliente_id = cli.id
-            JOIN catalogo_materias m ON e.materia_id = m.id
-            JOIN catalogo_asuntos a ON e.asunto_id = a.id
-            JOIN catalogo_estatus est ON e.estatus_id = est.id
-            JOIN abogados ab ON e.abogado_id = ab.usuario_id
+            LEFT JOIN clientes cli ON e.cliente_id = cli.id
+            LEFT JOIN catalogo_materias m ON e.materia_id = m.id
+            LEFT JOIN catalogo_asuntos a ON e.asunto_id = a.id
+            LEFT JOIN catalogo_estatus est ON e.estatus_id = est.id
+            LEFT JOIN abogados ab ON e.abogado_id = ab.id
             ORDER BY e.id DESC
         `;
     const [filas] = await db.query(query);
@@ -80,19 +87,44 @@ const Expediente = {
 
   // 4. ACTUALIZAR (U - Update) - (Ej: Cuando cambia de estatus o añaden el # judicial)
   actualizar: async (id, datos) => {
-    const query = `
-            UPDATE expedientes 
-            SET estatus_id = ?, abogado_id = ?, numero_expediente_judicial = ?, descripcion = ?, actualizado_por = ?
-            WHERE id = ?
-        `;
-    await db.query(query, [
-      datos.estatus_id,
-      datos.abogado_id,
-      datos.numero_expediente_judicial,
-      datos.descripcion,
-      datos.actualizado_por,
-      id,
-    ]);
+    // Solo se actualizan los campos que vienen en la peticion.
+    // Un campo ausente NUNCA sobreescribe lo que ya esta guardado: asi
+    // editar el estatus deja de borrar la descripcion del expediente.
+    const camposPermitidos = [
+      "estatus_id",
+      "abogado_id",
+      "numero_expediente_judicial",
+      "descripcion",
+      "prioridad",
+      "fecha_cierre_esperada",
+    ];
+
+    const asignaciones = [];
+    const valores = [];
+
+    for (const campo of camposPermitidos) {
+      const valor = datos[campo];
+      if (valor === undefined || valor === null) continue;
+
+      // La descripcion es informacion legal del caso. No se vacia por
+      // accidente: si llega en blanco, se conserva la que ya existe.
+      if (campo === "descripcion" && String(valor).trim() === "") continue;
+
+      asignaciones.push(`${campo} = ?`);
+      valores.push(valor);
+    }
+
+    // Si la peticion no traia ningun campo util, no tocamos la fila.
+    if (asignaciones.length === 0) return false;
+
+    asignaciones.push("actualizado_por = ?");
+    valores.push(datos.actualizado_por ?? null);
+    asignaciones.push("actualizado_en = NOW()");
+
+    valores.push(id);
+
+    const query = `UPDATE expedientes SET ${asignaciones.join(", ")} WHERE id = ?`;
+    await db.query(query, valores);
     return true;
   },
 

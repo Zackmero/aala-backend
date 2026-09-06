@@ -10,7 +10,7 @@ const Audiencia = {
                             FROM audiencias au
                             left join expedientes e on au.expediente_id = e.id
                             left join clientes c on e.cliente_id = c.id
-                            left join abogados ab on au.abogado_id = ab.usuario_id
+                            left join abogados ab on au.abogado_id = ab.id
                             ORDER BY au.fecha_hora DESC
 
         `;
@@ -38,7 +38,7 @@ const Audiencia = {
         FROM audiencias au
         LEFT JOIN expedientes e ON au.expediente_id = e.id
         LEFT JOIN clientes c ON e.cliente_id = c.id
-        LEFT JOIN abogados ab ON au.abogado_id = ab.usuario_id
+        LEFT JOIN abogados ab ON au.abogado_id = ab.id
         WHERE e.id = ?
         ORDER BY au.fecha_hora DESC
         `;

@@ -19,14 +19,14 @@ const Cliente = {
         const params = [
             datos.usuario_id, 
             datos.nombre_completo, 
-            datos.rfc, 
-            datos.curp, 
-            datos.telefono, 
-            datos.email,
-            datos.direccion, 
+            datos.rfc || null, 
+            datos.curp || null, 
+            datos.telefono || null, 
+            datos.email || null,
+            datos.direccion || null, 
             datos.estado_civil
         ];
-
+        
         return await connection.query(query, params);
     },
 

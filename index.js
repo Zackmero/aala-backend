@@ -24,7 +24,8 @@ const swaggerOptions = {
       description: "Documentación oficial de los endpoints del sistema legal.",
     },
     servers: [
-      { url: "http://localhost:3000", description: "Servidor Local" }
+      { url: "http://localhost:3000", description: "Servidor Local" },
+      { url: "https://aala-backend.onrender.com", description: "Producción" }
     ],
     components: {
       securitySchemes: {
@@ -54,8 +55,9 @@ const swaggerSpec = swaggerJsDoc(swaggerOptions);
 
 // --- MIDDLEWARES ---
 const origenesPermitidos = [
-  'http://localhost:5173', 
-  'https://portal.aala.mx' 
+  'http://localhost:5173',
+  'https://portal.aala.mx',
+  'https://www.portal.aala.mx'
 ];
 
 app.use(cors({
