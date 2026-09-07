@@ -74,6 +74,24 @@ const upload = multer({
       }
     },
   }),
+  // Sin esto se puede subir un archivo de cualquier tamano y cualquier
+  // extension directo a tu bucket, que pagas por almacenamiento.
+  limits: {
+    fileSize: 15 * 1024 * 1024, // 15 MB por archivo
+    files: 10,
+  },
+  fileFilter: (req, file, cb) => {
+    const permitidos = [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+      "image/heif",
+    ];
+    if (permitidos.includes(file.mimetype)) return cb(null, true);
+    cb(new Error("TIPO_ARCHIVO_NO_PERMITIDO"));
+  },
 });
 
 // Exportamos EXCLUSIVAMENTE 'upload' para que funcione el upload.array en tu enrutador

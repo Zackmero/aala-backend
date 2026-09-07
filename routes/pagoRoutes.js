@@ -13,6 +13,6 @@ router.get('/total', verificarToken, pagoController.obtenerTotalPagos);
 router.get('/:id', verificarToken, pagoController.obtenerPagosPorId);   
 router.put('/:id', verificarToken, uploadAWS.array('comprobante_url_pago', 1), pagoController.actualizaPago);
 router.delete('/:id', verificarToken, pagoController.eliminarPago);
-router.get('/:id/comprobante', pagoController.verComprobante);
+router.get('/:id/comprobante', verificarToken, pagoController.verComprobante);
 
 module.exports = router;
