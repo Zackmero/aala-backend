@@ -31,10 +31,21 @@ const Cliente = {
     },
 
     // Actualizar un registro existente
-    update: async (id, data) => {
+    // Acepta una conexion para poder ir dentro de una transaccion junto con
+    // la actualizacion del correo de acceso en `usuarios`.
+    update: async (id, data, conexion = db) => {
         const { nombre_completo, rfc, curp, telefono, email, direccion, estado_civil } = data;
         const query = 'UPDATE clientes SET nombre_completo=?, rfc=?, curp=?, telefono=?, email=?, direccion=?, estado_civil=? WHERE id=?';
-        const [result] = await db.query(query, [nombre_completo, rfc, curp, telefono, email, direccion, estado_civil, id]);
+        const [result] = await conexion.query(query, [
+            nombre_completo,
+            rfc || null,
+            curp || null,
+            telefono || null,
+            email || null,
+            direccion || null,
+            estado_civil,
+            id,
+        ]);
         return result;
     },
 

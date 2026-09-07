@@ -71,7 +71,7 @@ const Audiencia = {
     actualizar: async (id, datos) => {
         const query = `
             UPDATE audiencias 
-            SET expediente_id = ?, abogado_id = ?, fecha_hora = ?, titulo = ?, lugar = ?, estatus = ?, notas_preparacion = ?, resultado = ?, fecha_creacion = ?
+            SET expediente_id = ?, abogado_id = ?, fecha_hora = ?, titulo = ?, lugar = ?, estatus = ?, notas_preparacion = ?, resultado = ?
             WHERE id = ?
         `;
         const [resultado] = await db.query(query, [
@@ -83,7 +83,6 @@ const Audiencia = {
             datos.estatus,
             datos.notas_preparacion,
             datos.resultado,
-            datos.fecha_creacion,
             id
         ]);
         return resultado.affectedRows > 0;

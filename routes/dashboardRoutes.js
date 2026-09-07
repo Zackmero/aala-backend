@@ -4,6 +4,7 @@ const dashboardController = require('../controllers/dashboardController');
 const verificarToken = require('../middlewares/authMiddleware');
 
 
+router.get('/resumen', verificarToken, dashboardController.obtenerResumen);
 router.get('/proximos-vencimientos', verificarToken, dashboardController.obtenerProximosVencimientos);
 
 

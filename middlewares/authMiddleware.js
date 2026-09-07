@@ -15,7 +15,7 @@ const verificarToken = (req, res, next) => {
         
         // Desencriptamos el token. 
         // Nota: Asegúrate de usar la misma clave secreta con la que generas el token en tu Login
-        const decodificado = jwt.verify(tokenLimpio, process.env.JWT_SECRET || 'tu_clave_secreta_aqui');
+        const decodificado = jwt.verify(tokenLimpio, process.env.JWT_SECRET);
         
         // Guardamos los datos del usuario en la petición (request) para que el controlador los use
         req.usuario = decodificado; 

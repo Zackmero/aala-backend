@@ -1,6 +1,16 @@
 const dashboardModel = require('../models/dashboardModel');
 
 const dashboardController = {
+  obtenerResumen: async (req, res) => {
+    try {
+      const resumen = await dashboardModel.obtenerResumen();
+      res.status(200).json(resumen);
+    } catch (error) {
+      console.error("Error al obtener el resumen del dashboard:", error);
+      res.status(500).json({ mensaje: "No se pudo cargar el resumen del despacho" });
+    }
+  },
+
   obtenerProximosVencimientos: async (req, res) => {
     try {
     

@@ -1,6 +1,5 @@
 const Pago = require("../models/pagoModel");
 const db = require("../config/db");
-const jwt = require("jsonwebtoken");
 const {
   S3Client,
   GetObjectCommand,
@@ -184,18 +183,7 @@ const eliminarPago = async (req, res) => {
 const verComprobante = async (req, res) => {
   try {
     const { id } = req.params;
-
-    // Capturamos el token de los headers o de la URL (?token=...)
-    let token = req.headers["authorization"]?.split(" ")[1] || req.query.token;
-
-    if (!token) {
-      return res
-        .status(403)
-        .json({ error: "Token de autenticación requerido" });
-    }
-
-    // Verificamos que el token sea válido
-    jwt.verify(token, process.env.JWT_SECRET);
+    // La autenticación la resuelve el middleware verificarToken en la ruta.
 
     // 1. Buscamos el pago en la base de datos
     const queryBuscar = "SELECT comprobante_url FROM pagos WHERE id = ?";
@@ -219,14 +207,14 @@ const verComprobante = async (req, res) => {
     // 4. Generamos la URL firmada de S3 (expira en 60 segundos)
     const urlFirmada = await getSignedUrl(s3, command, { expiresIn: 60 });
 
-    // 5. REDIRIGIMOS directamente. Como el servidor de Node es el que redirige,
-    // evitamos por completo el error de CORS en el navegador de tu cliente.
-    res.redirect(urlFirmada);
+    // 5. Devolvemos la URL en JSON.
+    // Antes esto era res.redirect(): el fetch del front seguia la redireccion,
+    // recibia el archivo binario y reventaba al hacer .json(). Por eso nunca
+    // se pudo abrir un comprobante desde el sistema.
+    res.status(200).json({ url: urlFirmada });
   } catch (error) {
     console.error("Error al generar la URL del comprobante:", error);
-    res
-      .status(500)
-      .send("Token inválido o error al intentar visualizar el documento");
+    res.status(500).json({ mensaje: "No se pudo abrir el comprobante" });
   }
 };
 

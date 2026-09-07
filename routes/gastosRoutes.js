@@ -6,7 +6,7 @@ const uploadAWS = require("../middlewares/uploadAWS");
 
 router.post('/expediente/:id', verificarToken, uploadAWS.single('comprobante_gasto'), gastosController.crearGasto);
 
-router.get('/:id/comprobante', gastosController.verComprobante);
+router.get('/:id/comprobante', verificarToken, gastosController.verComprobante);
 router.get("/", verificarToken, gastosController.obtenerGastos);
 router.get('/expediente/:id', verificarToken, gastosController.obtenerGastosPorExpediente);
 

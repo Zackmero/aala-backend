@@ -1,8 +1,88 @@
 // Importamos la conexión a la base de datos
 const db = require("../config/db");
 
+// `catalogo_estatus` puede o no tener una columna que marque los estatus de
+// cierre. Se comprueba una sola vez. Si no existe, se cae a "expediente sin
+// fecha de cierre = activo", que es lo unico deducible sin esa marca.
+let cacheEstatusFinal = null;
+const tieneColumnaEsFinal = async () => {
+  if (cacheEstatusFinal !== null) return cacheEstatusFinal;
+  try {
+    const [filas] = await db.query("SHOW COLUMNS FROM catalogo_estatus LIKE 'es_final'");
+    cacheEstatusFinal = filas.length > 0;
+  } catch (error) {
+    cacheEstatusFinal = false;
+  }
+  return cacheEstatusFinal;
+};
+
 // El objeto Dashboard contendrá toda la lógica de base de datos
 const Dashboard = {
+
+  // Las cuatro cifras de las tarjetas, calculadas en SQL con sus filtros
+  // reales. Antes se pedian las listas completas y se contaba en el navegador:
+  // "casos activos" incluia los cerrados, "audiencias (7 dias)" eran todas las
+  // de la historia, e "ingresos del mes" era SUM(monto) de TODOS los cobros,
+  // incluidos los que nadie habia pagado.
+  obtenerResumen: async () => {
+    const [[{ clientes }]] = await db.query(
+      'SELECT COUNT(*) AS clientes FROM clientes'
+    );
+
+    // Casos activos
+    let casos = 0;
+    if (await tieneColumnaEsFinal()) {
+      const [[fila]] = await db.query(`
+        SELECT COUNT(*) AS casos
+        FROM expedientes e
+        LEFT JOIN catalogo_estatus est ON e.estatus_id = est.id
+        WHERE COALESCE(est.es_final, 0) = 0
+          AND e.fecha_cierre IS NULL
+      `);
+      casos = fila.casos;
+    } else {
+      const [[fila]] = await db.query(
+        'SELECT COUNT(*) AS casos FROM expedientes WHERE fecha_cierre IS NULL'
+      );
+      casos = fila.casos;
+    }
+
+    // Audiencias programadas dentro de los proximos 7 dias
+    const [[{ audiencias }]] = await db.query(`
+      SELECT COUNT(*) AS audiencias
+      FROM audiencias
+      WHERE estatus = 'Programada'
+        AND fecha_hora >= NOW()
+        AND fecha_hora < NOW() + INTERVAL 7 DAY
+    `);
+
+    // Ingresos del mes = lo efectivamente COBRADO en el mes en curso.
+    // Se usa fecha_pago, no fecha_vencimiento: importa cuando entro el dinero.
+    const [[{ ingresos }]] = await db.query(`
+      SELECT COALESCE(SUM(monto), 0) AS ingresos
+      FROM pagos
+      WHERE estatus = 'Pagado'
+        AND fecha_pago IS NOT NULL
+        AND YEAR(fecha_pago) = YEAR(CURDATE())
+        AND MONTH(fecha_pago) = MONTH(CURDATE())
+    `);
+
+    // Extra util para cobranza: lo vencido y sin pagar.
+    const [[{ porCobrar }]] = await db.query(`
+      SELECT COALESCE(SUM(monto), 0) AS porCobrar
+      FROM pagos
+      WHERE estatus = 'Pendiente'
+        AND fecha_vencimiento < CURDATE()
+    `);
+
+    return {
+      clientes: Number(clientes) || 0,
+      casos: Number(casos) || 0,
+      audiencias: Number(audiencias) || 0,
+      ingresos: Number(ingresos) || 0,
+      vencidoPorCobrar: Number(porCobrar) || 0,
+    };
+  },
   // Obtener todos los registros
   obtenerProximosVencimientos: async () => {
     try {

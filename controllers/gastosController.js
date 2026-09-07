@@ -7,7 +7,6 @@ const {
   DeleteObjectCommand,
 } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-const jwt = require("jsonwebtoken");
 
 // Configuración de S3
 const s3 = new S3Client({
@@ -49,6 +48,11 @@ const crearGasto = async (req, res) => {
       monto,
       fecha_gasto,
       notas,
+      // estatus y metodo_pago SI los manda el formulario, pero antes no se
+      // leian aqui: por eso un gasto creado como "Pagado" se guardaba como
+      // "Pendiente", con o sin comprobante.
+      estatus,
+      metodo_pago,
     } = req.body;
 
     const registrado_por = req.usuario.id;
@@ -62,6 +66,8 @@ const crearGasto = async (req, res) => {
       monto,
       fecha_gasto,
       notas,
+      estatus,
+      metodo_pago,
       // Cambiamos el guardado local por la URL que nos devuelve S3
       comprobante_url: req.file ? req.file.location : null,
     };
@@ -82,16 +88,21 @@ const actualizarGasto = async (req, res) => {
   try {
     const { id } = req.params;
     const datosActualizados = req.body;
-     const comprobanteRecibido = req.files && req.files.length > 0 ? req.files[0] : null;
-    
- if (comprobanteRecibido) {
+    // La ruta usa uploadAWS.single(), asi que el archivo llega en req.file.
+    // Antes esto revisaba req.files (plural) y nunca entraba: cada comprobante
+    // reemplazado dejaba el anterior huerfano en S3, pagandose para siempre.
+    const comprobanteRecibido = req.file || null;
+
+    if (comprobanteRecibido) {
       try {
-        // 1. Buscamos el pago en la base de datos ANTES de actualizarlo para ver si tiene comprobante
+        // 1. Buscamos el gasto ANTES de actualizarlo para ver si ya tenia comprobante
         const queryBuscar = "SELECT comprobante_url FROM gastos WHERE id = ?";
         const [resultados] = await db.query(queryBuscar, [id]);
         const gasto = resultados[0];
-      // Extraemos la ruta exacta (Key) de S3 limpiando la URL
-      
+
+        // Si no habia comprobante previo no hay nada que borrar en S3.
+        if (!gasto || !gasto.comprobante_url) throw new Error("SIN_COMPROBANTE_PREVIO");
+
       const urlAWS = new URL(gasto.comprobante_url);
       const fileKey = decodeURIComponent(urlAWS.pathname.substring(1));
 
@@ -176,15 +187,7 @@ const eliminarGasto = async (req, res) => {
 const verComprobante = async (req, res) => {
   try {
     const { id } = req.params;
-    let token = req.headers["authorization"]?.split(" ")[1] || req.query.token;
-
-    if (!token) {
-      return res
-        .status(403)
-        .json({ error: "Token de autenticación requerido" });
-    }
-
-    jwt.verify(token, process.env.JWT_SECRET);
+    // La autenticación la resuelve el middleware verificarToken en la ruta.
 
     const queryBuscar = "SELECT comprobante_url FROM gastos WHERE id = ?";
     const [resultados] = await db.query(queryBuscar, [id]);
@@ -203,12 +206,12 @@ const verComprobante = async (req, res) => {
     });
 
     const urlFirmada = await getSignedUrl(s3, command, { expiresIn: 60 });
-    res.redirect(urlFirmada);
+
+    // Igual que en pagos: JSON, no redirect. Ver H-02.
+    res.status(200).json({ url: urlFirmada });
   } catch (error) {
     console.error("Error al generar la URL del comprobante:", error);
-    res
-      .status(500)
-      .send("Token inválido o error al intentar visualizar el documento");
+    res.status(500).json({ mensaje: "No se pudo abrir el comprobante" });
   }
 };
 
