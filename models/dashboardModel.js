@@ -1,5 +1,6 @@
 // Importamos la conexión a la base de datos
 const db = require("../config/db");
+const { hoyMexico, ahoraMexico } = require("../utils/fechas");
 
 // `catalogo_estatus` puede o no tener una columna que marque los estatus de
 // cierre. Se comprueba una sola vez. Si no existe, se cae a "expediente sin
@@ -47,33 +48,48 @@ const Dashboard = {
       casos = fila.casos;
     }
 
-    // Audiencias programadas dentro de los proximos 7 dias
-    const [[{ audiencias }]] = await db.query(`
+    // Audiencias programadas dentro de los proximos 7 dias.
+    // Se pasa la hora "ahora" de México calculada en Node en vez de usar
+    // NOW() de MySQL, que corre en el timezone del servidor de base de
+    // datos (normalmente UTC) y no coincide con la hora local guardada en
+    // fecha_hora.
+    const ahora = ahoraMexico();
+    const [[{ audiencias }]] = await db.query(
+      `
       SELECT COUNT(*) AS audiencias
       FROM audiencias
       WHERE estatus = 'Programada'
-        AND fecha_hora >= NOW()
-        AND fecha_hora < NOW() + INTERVAL 7 DAY
-    `);
+        AND fecha_hora >= ?
+        AND fecha_hora < DATE_ADD(?, INTERVAL 7 DAY)
+    `,
+      [ahora, ahora]
+    );
 
     // Ingresos del mes = lo efectivamente COBRADO en el mes en curso.
     // Se usa fecha_pago, no fecha_vencimiento: importa cuando entro el dinero.
-    const [[{ ingresos }]] = await db.query(`
+    const [anioHoy, mesHoy] = hoyMexico().split("-");
+    const [[{ ingresos }]] = await db.query(
+      `
       SELECT COALESCE(SUM(monto), 0) AS ingresos
       FROM pagos
       WHERE estatus = 'Pagado'
         AND fecha_pago IS NOT NULL
-        AND YEAR(fecha_pago) = YEAR(CURDATE())
-        AND MONTH(fecha_pago) = MONTH(CURDATE())
-    `);
+        AND YEAR(fecha_pago) = ?
+        AND MONTH(fecha_pago) = ?
+    `,
+      [anioHoy, mesHoy]
+    );
 
     // Extra util para cobranza: lo vencido y sin pagar.
-    const [[{ porCobrar }]] = await db.query(`
+    const [[{ porCobrar }]] = await db.query(
+      `
       SELECT COALESCE(SUM(monto), 0) AS porCobrar
       FROM pagos
       WHERE estatus = 'Pendiente'
-        AND fecha_vencimiento < CURDATE()
-    `);
+        AND fecha_vencimiento < ?
+    `,
+      [hoyMexico()]
+    );
 
     return {
       clientes: Number(clientes) || 0,
@@ -86,41 +102,46 @@ const Dashboard = {
   // Obtener todos los registros
   obtenerProximosVencimientos: async () => {
     try {
+      const hoy = hoyMexico();
       const queryAudiencias = `
-                SELECT 
-                    a.id, 
-                    a.titulo as descripcion, 
-                    a.fecha_hora as fecha, 
+                SELECT
+                    a.id,
+                    a.titulo as descripcion,
+                    a.fecha_hora as fecha,
                     'Audiencia' as tipo,
                     e.numero_expediente_judicial as identificador,
                     e.prioridad as prioridad
                 FROM audiencias a
                 LEFT JOIN expedientes e ON a.expediente_id = e.id
-                WHERE a.estatus = 'Programada' AND a.fecha_hora >= CURDATE()
-                ORDER BY a.fecha_hora ASC 
+                WHERE a.estatus = 'Programada' AND a.fecha_hora >= ?
+                ORDER BY a.fecha_hora ASC
                 LIMIT 5
             `;
-      const [audiencias] = await db.query(queryAudiencias);
+      const [audiencias] = await db.query(queryAudiencias, [hoy]);
 
       const queryPagos = `
-                SELECT 
-                    p.id, 
-                    p.concepto as descripcion, 
-                    p.fecha_vencimiento as fecha, 
+                SELECT
+                    p.id,
+                    p.concepto as descripcion,
+                    p.fecha_vencimiento as fecha,
                     'Cobro' as tipo,
                     e.numero_expediente_judicial as identificador,
                     e.prioridad as prioridad
                 FROM pagos p
                 LEFT JOIN expedientes e ON p.expediente_id = e.id
-                WHERE p.estatus = 'Pendiente' AND p.fecha_vencimiento >= CURDATE()
-                ORDER BY p.fecha_vencimiento ASC 
+                WHERE p.estatus = 'Pendiente' AND p.fecha_vencimiento >= ?
+                ORDER BY p.fecha_vencimiento ASC
                 LIMIT 5
             `;
 
 
-      const [pagos] = await db.query(queryPagos);
+      const [pagos] = await db.query(queryPagos, [hoy]);
+      // Con dateStrings, `fecha` llega como texto plano ("YYYY-MM-DD" o
+      // "YYYY-MM-DD HH:MM:SS"); se normaliza el separador para que ambos
+      // formatos se interpreten igual (como hora local) al comparar.
+      const aInstante = (fecha) => new Date(String(fecha).replace(" ", "T")).getTime();
       const vencimientos = [...audiencias, ...pagos]
-        .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+        .sort((a, b) => aInstante(a.fecha) - aInstante(b.fecha))
         .slice(0, 5);
 
     
