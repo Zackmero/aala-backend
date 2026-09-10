@@ -1,9 +1,10 @@
 const db = require("../config/db");
+const { hoyMexico } = require("../utils/fechas");
 
 const Expediente = {
   // 1. CREAR (C - Create)
   crear: async (datos) => {
-    const fechaHoy = new Date().toISOString().split("T")[0];
+    const fechaHoy = hoyMexico();
 
     // A. Insertamos los datos SIN el título
     const queryInsert = `
